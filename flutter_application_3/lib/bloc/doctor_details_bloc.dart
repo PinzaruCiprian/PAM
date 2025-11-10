@@ -1,5 +1,6 @@
+import 'dart:convert';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../v5.dart';
 
 // Events
 abstract class DoctorDetailsEvent {}
@@ -29,12 +30,14 @@ class DoctorDetailsBloc extends Bloc<DoctorDetailsEvent, DoctorDetailsState> {
     on<LoadDoctorDetails>((event, emit) async {
       try {
         emit(DoctorDetailsLoading());
-        // Simulăm un delay scurt pentru a demonstra starea de loading
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (doctorDetails == null) {
-          throw Exception('Doctor details not found');
+        // Load JSON asset and parse
+        final jsonStr = await rootBundle.loadString('assets/v5.json');
+        final Map<String, dynamic> data = json.decode(jsonStr) as Map<String, dynamic>;
+        final details = data['doctorDetails'] as Map<String, dynamic>?;
+        if (details == null) {
+          throw Exception('Doctor details not found in v5.json');
         }
-        emit(DoctorDetailsLoaded(doctorDetails));
+        emit(DoctorDetailsLoaded(details));
       } catch (e) {
         emit(DoctorDetailsError(e.toString()));
       }
